@@ -1,51 +1,50 @@
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Random;
+
+import static utils.Utils.*;
 
 public class Main {
 
-    static AtomicInteger atomic = new AtomicInteger(100);
-
-        public static void main(String[] args) throws InterruptedException {
-
+    public static void main(String[] args) throws InterruptedException {
         Random random = new Random();
-
-        String[] texts = new String[100_000];
+        String[] texts = new String[100000];
         for (int i = 0; i < texts.length; i++) {
+            texts[i] = generateText("abc", 3 + random.nextInt(3));
         }
 
-        new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                texts[i] = generateText("abc", 3 + random.nextInt(3));
+        Thread palindrome = new Thread(() -> {
+            for (String text : texts) {
+                if (isPalindrome(text) && !isSameChar(text)) {
+                    incrementCounter(text.length());
+                }
             }
-            System.out.println("Красивых слов с длиной 3: " + atomic.getAndAdd(3) + " шт");
-        }).start();
+        });
+        palindrome.start();
 
-        new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                texts[i] = generateText("abba", 4 + random.nextInt(3));
+        Thread sameChar = new Thread(() -> {
+            for (String text : texts) {
+                if (isSameChar(text)) {
+                    incrementCounter(text.length());
+                }
             }
-            System.out.println("Красивых слов с длиной 4: " + atomic.getAndAdd(4) + " шт");
+        });
+        sameChar.start();
 
-        }).start();
-
-        new Thread(() -> {
-            for (int i = 0; i < texts.length; i++) {
-                texts[i] = generateText("aabbb", 5 + random.nextInt(3));
+        Thread ascendingOrder = new Thread(() -> {
+            for (String text : texts) {
+                if (!isSameChar(text) && isAscendingOrder(text)) {
+                    incrementCounter(text.length());
+                }
             }
-            System.out.println("Красивых слов с длиной 5: " + atomic.getAndAdd(5) + " шт");
+        });
+        ascendingOrder.start();
 
-        }).start();
+        sameChar.join();
+        ascendingOrder.join();
+        palindrome.join();
 
-        Thread.sleep(3000);
-    }
-
-    public static String generateText(String letters, int length) {
-        Random random = new Random();
-        StringBuilder text = new StringBuilder();
-        for (int i = 0; i < length; i++) {
-            text.append(letters.charAt(random.nextInt(letters.length())));
-        }
-        return text.toString();
+        System.out.println("Красивых слов с длиной 3: " + counter3);
+        System.out.println("Красивых слов с длиной 4: " + counter4);
+        System.out.println("Красивых слов с длиной 5: " + counter5);
     }
 }
 
